@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Chargement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bungee&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     NEXUS · Loading Screen — charte Nexus (cl_theme.lua)
+     Stage 1920x1080 mis à l'échelle pour remplir l'écran client
+     ============================================================ */
+  :root{
+    --night:#16202F; --bg:#1E2C40; --surface:#27384F; --raised:#324863;
+    --line:#46597A; --ink:#FFFFFF; --muted:#AEBBD4;
+    --pink:#FF6FB1; --cyan:#3FAEF0; --yellow:#FFC83D; --lime:#4FCB63;
+    --orange:#FF8A2B; --teal:#2BBFAE; --danger:#FF5247; --money:#3FD17C;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{
+    width:100%;height:100%;overflow:hidden;background:var(--night);
+    font-family:'Outfit',sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  /* Fond global : dégradé + halos colorés diffus */
+  body{
+    background:
+      radial-gradient(900px 600px at 14% 6%, rgba(255,111,177,.10), transparent 60%),
+      radial-gradient(1100px 700px at 92% 88%, rgba(63,174,240,.12), transparent 62%),
+      linear-gradient(160deg, #16202F 0%, #1B2A3E 55%, #16202F 100%);
+  }
+  /* Scène fixe 1920x1080, centrée et scalée par JS */
+  #stage{
+    position:absolute; left:50%; top:50%;
+    width:1920px; height:1080px;
+    transform-origin:center center;
+    padding:64px 72px;
+    display:flex; flex-direction:column;
+  }
+
+  /* ---------------- TOP BAR ---------------- */
+  .top{display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:20px}
+  .logo{
+    width:74px;height:74px;border-radius:20px;
+    background:linear-gradient(150deg,#FF8FC4,#FF5BA6);
+    box-shadow:0 10px 0 rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.35);
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .logo span{
+    font-family:'Outfit';font-weight:900;font-size:46px;color:#fff;
+    text-shadow:0 3px 0 rgba(0,0,0,.18); transform:translateY(-2px);
+  }
+  .brand .word{font-family:'Bungee';font-size:40px;letter-spacing:1px;line-height:1}
+  .brand .tag{
+    margin-top:7px;font-family:'Space Mono';font-weight:700;font-size:13px;
+    letter-spacing:3px;color:var(--muted);
+  }
+  .brand .tag b{color:var(--pink)}
+  .brand .tag i{color:var(--cyan);font-style:normal}
+
+  .status{
+    display:flex;align-items:center;gap:12px;
+    background:rgba(39,56,79,.85);border:2px solid var(--line);
+    padding:12px 20px;border-radius:16px;
+    font-family:'Space Mono';font-weight:700;font-size:16px;letter-spacing:1px;
+    box-shadow:0 8px 0 rgba(0,0,0,.18);
+  }
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--lime);
+    box-shadow:0 0 0 0 rgba(79,203,99,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,203,99,.55)}70%{box-shadow:0 0 0 12px rgba(79,203,99,0)}100%{box-shadow:0 0 0 0 rgba(79,203,99,0)}}
+  .status .lbl{color:var(--ink)}
+  .status .cur{color:var(--cyan)}
+  .status .sep{color:var(--line)}
+  .status .max{color:var(--muted)}
+
+  /* ---------------- CORPS (2 colonnes) ---------------- */
+  .body{flex:1;display:flex;gap:56px;align-items:center;padding:18px 0}
+  .left{width:54%;display:flex;flex-direction:column}
+  .right{flex:1;display:flex;align-items:center;justify-content:center}
+
+  .overline{
+    font-weight:700;font-size:20px;letter-spacing:5px;color:var(--cyan);
+    text-transform:uppercase;margin-bottom:14px;
+  }
+  .title{
+    font-family:'Anton';font-size:150px;line-height:.92;letter-spacing:2px;
+    background:linear-gradient(180deg,#FFA8D2 0%,#FF6FB1 55%,#F0529B 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 6px 0 rgba(0,0,0,.18);margin-bottom:26px;
+    filter:drop-shadow(0 10px 24px rgba(255,111,177,.25));
+  }
+  .lead{
+    font-size:26px;line-height:1.5;font-weight:500;color:#E7ECF6;
+    max-width:760px;margin-bottom:30px;
+  }
+  .chips{display:flex;gap:16px;margin-bottom:30px;flex-wrap:wrap}
+  .chip{
+    display:flex;align-items:center;gap:12px;
+    background:var(--surface);border:2px solid var(--line);
+    padding:14px 22px;border-radius:14px;
+    font-family:'Space Mono';font-weight:700;font-size:18px;
+    box-shadow:0 6px 0 rgba(0,0,0,.18);
+  }
+  .chip .k{color:var(--muted)}
+  .chip .v-cyan{color:var(--cyan)}
+  .chip .v-pink{color:var(--pink)}
+
+  .jobs{display:flex;gap:14px;flex-wrap:wrap}
+  .job{
+    display:flex;align-items:center;gap:9px;
+    padding:11px 18px;border-radius:12px;font-weight:800;font-size:17px;
+    letter-spacing:.5px;border:2px solid;box-shadow:0 5px 0 rgba(0,0,0,.18);
+  }
+  .job .ico{font-size:19px}
+  .job.pink {background:rgba(255,111,177,.14);border-color:var(--pink);color:var(--pink)}
+  .job.cyan {background:rgba(63,174,240,.14);border-color:var(--cyan);color:var(--cyan)}
+  .job.yellow{background:rgba(255,200,61,.14);border-color:var(--yellow);color:var(--yellow)}
+  .job.lime {background:rgba(79,203,99,.14);border-color:var(--lime);color:var(--lime)}
+
+  /* Fenêtre preview (droite) */
+  .screen{
+    width:100%;aspect-ratio:16/9;border-radius:24px;
+    background:
+      radial-gradient(120% 120% at 50% 0%, rgba(63,174,240,.10), transparent 55%),
+      linear-gradient(180deg,#101A28,#0C141F);
+    border:3px solid var(--line);position:relative;overflow:hidden;
+    box-shadow:0 18px 0 rgba(0,0,0,.18), inset 0 0 80px rgba(0,0,0,.45);
+  }
+  .screen::before{
+    content:"";position:absolute;inset:18px;border-radius:16px;
+    border:2px dashed rgba(112,137,170,.45);
+  }
+  .screen .label{
+    position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    text-align:center;font-family:'Space Mono';font-weight:700;
+    font-size:20px;letter-spacing:3px;color:var(--muted);
+  }
+  .screen .scan{
+    position:absolute;left:0;right:0;height:140px;
+    background:linear-gradient(180deg,transparent,rgba(63,174,240,.07),transparent);
+    animation:scan 4.5s linear infinite;
+  }
+  @keyframes scan{0%{top:-140px}100%{top:100%}}
+
+  /* ---------------- BARRE DE PROGRESSION ---------------- */
+  .footer{display:flex;flex-direction:column;gap:16px}
+  .bar-head{display:flex;align-items:flex-end;justify-content:space-between}
+  .bar-title{font-family:'Anton';font-size:30px;letter-spacing:2px}
+  .pct{font-family:'Space Mono';font-weight:700;font-size:32px;color:var(--cyan)}
+  .track{
+    width:100%;height:24px;border-radius:14px;background:#0F1926;
+    border:2px solid var(--line);overflow:hidden;position:relative;
+  }
+  .fill{
+    height:100%;width:0%;border-radius:12px;
+    background:linear-gradient(90deg,var(--cyan),#7CC6F5 45%,var(--pink));
+    box-shadow:0 0 18px rgba(63,174,240,.45);
+    transition:width .45s cubic-bezier(.25,.8,.3,1);position:relative;
+  }
+  .fill::after{
+    content:"";position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+    background-size:200px 100%;animation:shimmer 1.6s linear infinite;
+  }
+  @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:calc(100% + 200px) 0}}
+  .tip{
+    font-size:19px;color:var(--muted);font-weight:500;display:flex;
+    align-items:center;gap:10px;
+  }
+  .tip b{color:var(--cyan);font-weight:700}
+</style>
+</head>
+<body>
+  <div id="stage">
+
+    <!-- ===== TOP ===== -->
+    <div class="top">
+      <div class="brand">
+        <div class="logo"><span>N</span></div>
+        <div>
+          <div class="word">NEXUS</div>
+          <div class="tag"><b>◆</b> DARKRP FUN <i>·</i> GMOD FR</div>
+        </div>
+      </div>
+      <div class="status">
+        <span class="dot"></span>
+        <span class="lbl">EN LIGNE</span>
+        <span class="cur" id="curPlayers">—</span>
+        <span class="sep">/</span>
+        <span class="max" id="maxPlayers">128</span>
+      </div>
+    </div>
+
+    <!-- ===== CORPS ===== -->
+    <div class="body">
+      <div class="left">
+        <div class="overline">LE QUARTIER T'ATTEND 👋</div>
+        <div class="title">NEXUS</div>
+        <div class="lead">Monte ton business, fais ta loi, éclate-toi. Choisis ton job et fais-toi un nom dans la rue.</div>
+        <div class="chips">
+          <div class="chip"><span class="k">connect</span><span class="v-cyan" id="connectAddr">play.nexus-rp.gg</span></div>
+          <div class="chip"><span class="v-pink">discord.gg/nexus</span></div>
+        </div>
+        <div class="jobs">
+          <div class="job pink"><span class="ico">🪙</span>DEALER</div>
+          <div class="job cyan"><span class="ico">👮</span>POLICE</div>
+          <div class="job yellow"><span class="ico">🔧</span>GARAGE</div>
+          <div class="job lime"><span class="ico">🎧</span>DJ</div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="screen">
+          <div class="scan"></div>
+          <div class="label" id="screenLabel">NEXUS IN-GAME · 16:9</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FOOTER / PROGRESSION ===== -->
+    <div class="footer">
+      <div class="bar-head">
+        <div class="bar-title" id="barTitle">CHARGEMENT DU SERVEUR…</div>
+        <div class="pct" id="pctText">0%</div>
+      </div>
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="tip">💡 <span><b>Astuce :</b> ouvre le menu F4 pour choisir ton job dès le spawn.</span></div>
+    </div>
+
+  </div>
+
+<script>
+/* =================================================================
+   NEXUS Loading — logique
+   ================================================================= */
+
+/* --- CONFIG ------------------------------------------------------ */
+// URL d'un endpoint JSON renvoyant { players: <nombre> } pour afficher
+// le nombre de joueurs EN DIRECT. Laisse "" si tu n'en as pas :
+// on affichera alors juste le nombre max (l'API du loading screen GMOD
+// ne fournit PAS le nombre de joueurs connectés).
+var LIVE_COUNT_URL = "";
+var CONNECT_ADDR   = "play.nexus-rp.gg";   // adresse affichée sous "connect"
+
+/* --- Mise à l'échelle de la scène (remplit l'écran, garde le ratio) */
+function fitStage(){
+  var s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  var st = document.getElementById('stage');
+  st.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+}
+window.addEventListener('resize', fitStage);
+fitStage();
+
+document.getElementById('connectAddr').textContent = CONNECT_ADDR;
+
+/* --- Barre de progression --------------------------------------- */
+var fillEl = document.getElementById('fill');
+var pctEl  = document.getElementById('pctText');
+var shown  = 0;          // % affiché (lissé)
+var target = 0;          // % cible réel
+
+function render(){
+  shown += (target - shown) * 0.18;
+  if (Math.abs(target - shown) < 0.3) shown = target;
+  var p = Math.round(shown);
+  fillEl.style.width = p + '%';
+  pctEl.textContent  = p + '%';
+  requestAnimationFrame(render);
+}
+render();
+
+function setProgress(p){ target = Math.max(target, Math.min(100, p)); }
+
+/* =================================================================
+   HOOKS GMOD — fonctions appelées automatiquement par le jeu
+   ================================================================= */
+var filesTotal = 0, filesNeeded = 0;
+
+function recompute(){
+  if (filesTotal > 0){
+    setProgress(((filesTotal - filesNeeded) / filesTotal) * 100);
+  }
+}
+
+// Détails serveur : (nom, url, map, maxjoueurs, steamid, gamemode)
+window.GameDetails = function(servername, serverurl, mapname, maxplayers, steamid, gamemode){
+  try{
+    if (maxplayers) document.getElementById('maxPlayers').textContent = maxplayers;
+    if (mapname){
+      document.getElementById('screenLabel').textContent = 'MAP · ' + String(mapname).toUpperCase();
+    }
+  }catch(e){}
+};
+
+// Nombre total de fichiers à télécharger
+window.SetFilesTotal = function(total){ filesTotal = total; recompute(); };
+
+// Nombre de fichiers restants (décroît jusqu'à 0)
+window.SetFilesNeeded = function(needed){ filesNeeded = needed; recompute(); };
+
+// Fichier en cours de téléchargement
+window.DownloadingFile = function(filename){
+  document.getElementById('barTitle').textContent = 'TÉLÉCHARGEMENT DES RESSOURCES…';
+};
+
+// Changement de statut (facultatif selon version)
+window.SetStatusChanged = function(status){
+  if (status) document.getElementById('barTitle').textContent = String(status).toUpperCase();
+};
+
+/* =================================================================
+   Repli : si GMOD ne pousse pas la progression (test navigateur),
+   on remplit doucement jusqu'à 90% pour montrer l'animation.
+   En jeu, les hooks ci-dessus prennent le relais et atteignent 100%.
+   ================================================================= */
+var fakeTimer = setInterval(function(){
+  if (filesTotal === 0){ setProgress(target + 1.2); if (target >= 90) clearInterval(fakeTimer); }
+  else clearInterval(fakeTimer);
+}, 90);
+
+/* --- Compteur joueurs en direct (optionnel) --------------------- */
+function refreshPlayers(){
+  if (!LIVE_COUNT_URL) return;
+  fetch(LIVE_COUNT_URL, {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d && typeof d.players !== 'undefined')
+        document.getElementById('curPlayers').textContent = d.players;
+    })
+    .catch(function(){});
+}
+if (LIVE_COUNT_URL){ refreshPlayers(); setInterval(refreshPlayers, 10000); }
+</script>
+</body>
+</html>
